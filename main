@@ -1,0 +1,26 @@
+
+from bs4 import BeautifulSoup
+import requests
+
+def get_html():
+    response = requests.get(url='https://parsinger.ru/html/index3_page_1.html')
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, 'lxml')
+    pagen = [link['href'] for link in soup.find('div', class_='pagen').find_all('a')]
+    schema = 'https://parsinger.ru/html/'
+    list_link = []
+    for link in pagen:
+        list_link.append(f"{schema}{link}")
+    return list_link
+
+
+def get_names(url):
+    response = requests.get(url)
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, 'lxml')
+    pagen = [link.text for link in soup.find_all('a', class_='name_item')]
+    return pagen
+
+
+result = [get_names(pages) for pages in get_html()]
+print(result)
