@@ -1,6 +1,18 @@
 from bs4 import BeautifulSoup
 import requests
 
+#собираем ссылки разделов
+def get_parts(url):
+    response = requests.get(url)
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, 'lxml')
+    pagen = [link['href'] for link in soup.find('div', class_='nav_menu').find_all('a')]
+    schema = 'https://parsinger.ru/html/'
+    list_link = []
+    for link in pagen:
+        list_link.append(f"{schema}{link}")
+    return list_link
+
 #собираем ссылки пагинации
 def get_html(url):
     response = requests.get(url)
@@ -52,10 +64,11 @@ def full_cost(url):
 
 result = 0
 qwe = 0
-for page in get_html('https://parsinger.ru/html/index1_page_1.html'):
-    for page_1 in get_about(page):
-        result += get_article(page_1)
-        qwe += 1
+for parts in get_parts('https://parsinger.ru/html/index2_page_1.html'):
+    for html in get_html(parts):
+        for page in get_about(html):
+            result += full_cost(page)
+            qwe += 1
 
 print(result, qwe)
 
