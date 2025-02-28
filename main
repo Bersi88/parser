@@ -1,8 +1,9 @@
 from bs4 import BeautifulSoup
 import requests
 
-def get_html():
-    response = requests.get(url='https://parsinger.ru/html/index3_page_1.html')
+#собираем ссылки пагинации
+def get_html(url):
+    response = requests.get(url)
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'lxml')
     pagen = [link['href'] for link in soup.find('div', class_='pagen').find_all('a')]
@@ -12,7 +13,7 @@ def get_html():
         list_link.append(f"{schema}{link}")
     return list_link
 
-
+#собираем имена на страницах
 def get_names(url):
     response = requests.get(url)
     response.encoding = 'utf-8'
@@ -20,6 +21,41 @@ def get_names(url):
     pagen = [link.text for link in soup.find_all('a', class_='name_item')]
     return pagen
 
+#собираем ссылки "подробнее"
+def get_about(url):
+    response = requests.get(url)
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, 'lxml')
+    pagen = [link['href'] for link in soup.select('.sale_button a')]
+    schema = 'https://parsinger.ru/html/'
+    list_link = []
+    for link in pagen:
+        list_link.append(f"{schema}{link}")
+    return list_link
 
-result = [get_names(pages) for pages in get_html()]
-print(result)
+#собираем и складываем артикулы
+def get_article(url):
+    response = requests.get(url)
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, 'lxml')
+    art = int(soup.find('p', class_='article').text.replace('Артикул: ', ''))
+    return art
+
+#собираем и складываем стоимость товаров
+def full_cost(url):
+    response = requests.get(url)
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, 'lxml')
+    price = int(soup.find('span', id="price").text.replace(' руб', ''))
+    count = int(soup.find('span', id="in_stock").text.replace('В наличии: ', ''))
+    return price * count
+
+result = 0
+qwe = 0
+for page in get_html('https://parsinger.ru/html/index1_page_1.html'):
+    for page_1 in get_about(page):
+        result += get_article(page_1)
+        qwe += 1
+
+print(result, qwe)
+
